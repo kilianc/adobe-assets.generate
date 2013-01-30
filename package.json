@@ -1,18 +1,16 @@
 {
   "author": "Kilian Ciuffolo <me@nailik.org> (http://nailik.org)",
-  "name": "assets-dumper",
+  "name": "assets.generate",
   "description": "Realtime Photoshop assets dumping plugin",
-  "version": "0.1.0",
+  "version": "0.0.2",
   "repository": {
     "type": "git",
-    "url": "http://github.com/kilianc/motherlover.git"
+    "url": "http://github.com/kilianc/assets.generate.git"
   },
   "engines": {
     "node": ">= v0.8.x"
   },
   "dependencies": {
-    "canvas": "0.13.x",
-    "mkdirp": "0.3.x",
-    "async": "0.1.x"
+    "mkdirp": "0.3.x"
   }
 }
