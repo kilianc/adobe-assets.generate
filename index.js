@@ -5,15 +5,13 @@ var fs = require('fs'),
     convert = require('./lib/convert'),
     getDocumentInfoPaths = require('./lib/getdocumentinfopaths'),
     timW2Kilian = require('./lib/timw2kilian'),
-    xpm2canvas = require('./lib/xpm2canvas'),
-    xpm2png = require('./lib/xpm2png'),
     xpm = require('./lib/xpm'),
+    xpm2png = require('./lib/xpm2png'),
     jsx = require('./jsx')
 
 var ps
 var layers = {}
 var activeDocumentPath, activeDocumentBasename
-var spritesheets = {}
 
 module.exports = function loadAssetsDumper(photoshop) {
   ps = photoshop
@@ -123,33 +121,31 @@ function parseLayer(layerId) {
 
   console.log({ name: 'log', data: format })
   console.error({ name: 'log', data: 'assets dump queued' })
+
   clearTimeout(layer.timeout)
   layer.timeout = setTimeout(function () { dumpAsset(layerId, format) }, 300)
 }
 
 function dumpAsset(layerId, assetFormat) {
-  ps.execute(jsx.getLayerPixmap(layerId), function (err, response, pixmap) {
+  ps.execute(jsx.getLayerPixmap(layerId), function (err, response, pixmapResponse) {
     if (err) return console.error(err)
 
     var layer = layers[layerId]
-    var canvas = xpm2canvas(pixmap.buffer)
-    var args = ['-size', canvas.width + 'x' + canvas.height]
+    var pixmap = xpm(pixmapResponse.buffer)
+    var args = ['-size', pixmap.width + 'x' + pixmap.height]
 
     if ('.jpg' === assetFormat.ext) {
-      canvas.makeWhiteBg()
-      args = ['-quality', Math.round(assetFormat.quality / 12 * 100)]
+      args = ['-quality', Math.round(assetFormat.quality / 12 * 100), '-background',  'white', '-flatten']
     }
 
     args = args.concat(['-', assetFormat.format + ':-'])
 
     var proc = convert(args)
-    var pngStream = canvas.createPNGStream()
     var fileStream = fs.createWriteStream(getAssetPath(layer.name))
     var stderr = ''
 
     proc.stderr.on('data', function (chunk) { stderr += chunk; })
-    proc.stdin.on('error', function () { pngStream.removeAllListeners() })
-    pngStream.pipe(proc.stdin)
+    xpm2png(pixmap, proc.stdin.end.bind(proc.stdin))
     proc.stdout.pipe(fileStream)
     proc.stderr.on('close', function (chunk) {
       stderr && console.error({ name: 'log', data: 'imagemagick err: ' + stderr })
