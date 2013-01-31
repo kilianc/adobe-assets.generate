@@ -40,6 +40,8 @@ function main() {
   ps.on('error', console.error)
 
   ps.on('documentInfo', function (documentInfo) {
+    console.error({ name: 'log', data: 'end parsing ' + activeDocumentPath })
+
     var paths = getDocumentInfoPaths(documentInfo.imageEvents.imageChangedLayerOrder)
 
     documentInfo.layerEvents.forEach(function (layerData) {
